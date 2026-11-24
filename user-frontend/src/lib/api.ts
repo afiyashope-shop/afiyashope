@@ -33,6 +33,13 @@ export type Pagination = {
 
 type ResourceResponse<T> = { data: T };
 
+export class ApiRequestError extends Error {
+  constructor(public readonly status: number) {
+    super(`Catalog API request failed with status ${status}`);
+    this.name = "ApiRequestError";
+  }
+}
+
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
 
 async function request<T>(path: string): Promise<T> {
@@ -41,7 +48,7 @@ async function request<T>(path: string): Promise<T> {
     headers: { Accept: "application/json" },
   });
   if (!response.ok) {
-    throw new Error(`Catalog API request failed with status ${response.status}`);
+    throw new ApiRequestError(response.status);
   }
   return response.json() as Promise<T>;
 }

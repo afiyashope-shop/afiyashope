@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { PRODUCT_CATEGORIES } from "@/lib/catalog";
 import { translate, type Language } from "@/lib/i18n";

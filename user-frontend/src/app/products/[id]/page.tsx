@@ -5,10 +5,11 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/ProductGallery";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OfflineCatalog } from "@/components/OfflineCatalog";
 import { ProtectedContent } from "@/components/ProtectedContent";
 import { ShopFooter } from "@/components/ShopFooter";
 import { ShopHeader } from "@/components/ShopHeader";
-import { formatRiel, getProduct, getSettings } from "@/lib/api";
+import { ApiRequestError, formatRiel, getProduct, getSettings } from "@/lib/api";
 import { translate } from "@/lib/i18n";
 import { CopyProductButton } from "./CopyProductButton";
 
@@ -51,8 +52,17 @@ async function ProductDetail({ params }: ProductPageProps) {
   ]);
   const language = cookieStore.get("afiya_language")?.value === "en" ? "en" : "km";
   const t = (text: string) => translate(language, text);
-  if (productResult.status === "rejected") notFound();
-  if (settings.status === "rejected") throw settings.reason;
+  if (productResult.status === "rejected") {
+    if (productResult.reason instanceof ApiRequestError && productResult.reason.status === 404) {
+      notFound();
+    }
+    console.error("Product details could not be loaded.", productResult.reason);
+    return <OfflineCatalog productId={id} language={language} />;
+  }
+  if (settings.status === "rejected") {
+    console.error("Store settings could not be loaded.", settings.reason);
+    return <OfflineCatalog productId={id} language={language} />;
+  }
   const product = productResult.value;
   const shop = settings.value;
   const inStock = product.stock === "in_stock";

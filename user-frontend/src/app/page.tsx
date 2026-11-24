@@ -6,7 +6,7 @@ import { connection } from "next/server";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryRail } from "@/components/CategoryRail";
 import { LoadingScreen } from "@/components/LoadingScreen";
-import { OfflineState } from "@/components/OfflineState";
+import { CatalogCacheWriter, OfflineCatalog } from "@/components/OfflineCatalog";
 import { ProtectedContent } from "@/components/ProtectedContent";
 import { ShopFooter } from "@/components/ShopFooter";
 import { ShopHeader } from "@/components/ShopHeader";
@@ -45,7 +45,7 @@ async function HomeCatalog({ searchParams }: PageProps) {
     if (settingsResult.status === "rejected") {
       console.error("Store settings could not be loaded.", settingsResult.reason);
     }
-    return <OfflineState />;
+    return <OfflineCatalog search={search} tag={tag} language={language} />;
   }
   const { products, pagination } = productsResult.value;
   const settings = settingsResult.value;
@@ -59,6 +59,9 @@ async function HomeCatalog({ searchParams }: PageProps) {
 
   return (
     <ProtectedContent enabled={settings.protect_copy}>
+      {!search && tag === "all" && page === 1
+        ? <CatalogCacheWriter products={products} settings={settings} />
+        : null}
       <ShopHeader settings={settings} activeTag={tag} search={search} language={language} />
       <section className={`fashion-hero${settings.banner_url ? " has-banner" : ""}`}>
         {settings.banner_url ? (
