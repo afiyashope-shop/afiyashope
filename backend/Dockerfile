@@ -11,7 +11,10 @@ RUN apt-get update \
         opcache \
         pdo_pgsql \
         zip \
-    && a2enmod headers rewrite \
+    && for module in mpm_event mpm_worker; do \
+        if [ -e "/etc/apache2/mods-enabled/${module}.load" ]; then a2dismod "$module"; fi; \
+    done \
+    && a2enmod mpm_prefork headers rewrite \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -42,6 +45,7 @@ RUN composer install \
         '</Directory>' \
         > /etc/apache2/conf-available/laravel.conf \
     && a2enconf laravel \
+    && apache2ctl configtest \
     && printf '%s\n' \
         'upload_max_filesize=6M' \
         'post_max_size=32M' \
