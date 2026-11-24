@@ -12,7 +12,7 @@ No Docker is used. Create `afiya_shope_db` in pgAdmin before running migrations;
 
 ## Requirements
 
-- PHP version supported by Laravel 13 (PHP 8.3 or later) and Composer.
+- PHP 8.4.1 or later and Composer (the locked Symfony dependencies require PHP 8.4.1+).
 - Enable PHP's `pdo_pgsql` extension. Verify it with `php -m` and confirm `pdo_pgsql` appears.
 - Node.js 20.9 or later and npm.
 - PostgreSQL 18 running locally, with the `afiya_shope_db` database already created in pgAdmin.

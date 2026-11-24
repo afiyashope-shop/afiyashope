@@ -1,17 +1,13 @@
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        libcurl4-openssl-dev \
-        libonig-dev \
         libpq-dev \
         libzip-dev \
         unzip \
     && docker-php-ext-install -j"$(nproc)" \
-        curl \
-        mbstring \
         opcache \
         pdo_pgsql \
         zip \
