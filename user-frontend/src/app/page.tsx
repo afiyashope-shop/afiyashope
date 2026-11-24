@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { ProductCard } from "@/components/ProductCard";
 import { CategoryRail } from "@/components/CategoryRail";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OfflineState } from "@/components/OfflineState";
 import { ProtectedContent } from "@/components/ProtectedContent";
 import { ShopFooter } from "@/components/ShopFooter";
 import { ShopHeader } from "@/components/ShopHeader";
@@ -33,10 +34,21 @@ async function HomeCatalog({ searchParams }: PageProps) {
   const search = query.search?.trim() || "";
   const tag = query.tag || "all";
   const page = Math.max(1, Number(query.page) || 1);
-  const [{ products, pagination }, settings] = await Promise.all([
+  const [productsResult, settingsResult] = await Promise.allSettled([
     getProducts({ search, tag, page }),
     getSettings(),
   ]);
+  if (productsResult.status === "rejected" || settingsResult.status === "rejected") {
+    if (productsResult.status === "rejected") {
+      console.error("Storefront products could not be loaded.", productsResult.reason);
+    }
+    if (settingsResult.status === "rejected") {
+      console.error("Store settings could not be loaded.", settingsResult.reason);
+    }
+    return <OfflineState />;
+  }
+  const { products, pagination } = productsResult.value;
+  const settings = settingsResult.value;
   const pageLink = (nextPage: number) => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
