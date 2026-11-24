@@ -110,11 +110,17 @@ Create two separate Vercel projects from the repository:
 3. Set `NEXT_PUBLIC_API_URL` in both projects to the production Laravel API URL. Use HTTPS.
 4. Deploy both Next.js projects with their default install/build settings. Configure the production storefront and dashboard origins in the backend's `CORS_ALLOWED_ORIGINS`.
 
-### Laravel API on a VPS
+### Laravel API on Railway with Docker
 
-Deploy `backend` to a supported PHP VPS; do not deploy Laravel as a Vercel serverless project. Configure PHP 8.3+, Composer, PostgreSQL access, a web server, and an S3-compatible image bucket as appropriate.
+The backend includes a Dockerfile and Railway entrypoint in `backend`. Create a Railway service from this repository and set its **Root Directory** to `backend`; Railway will build the Dockerfile there. Do not deploy the Laravel API as a Vercel serverless project.
 
-Production checklist:
+Add the production variables from `backend/.env.example` in Railway's service Variables. Set `APP_ENV=production`, `APP_DEBUG=false`, a generated private `APP_KEY`, the Railway HTTPS domain as `APP_URL`, the Neon PostgreSQL connection values with `DB_SSLMODE=require`, and the two exact Vercel origins in `CORS_ALLOWED_ORIGINS`. Never copy local `.env` files or credentials into the Docker image or Git.
+
+Set the Railway service **Pre-deploy Command** to `php artisan migrate --force` so schema migrations complete before the new deployment starts. Configure the service's health check path as `/up`, then generate a Railway public domain. Set `NEXT_PUBLIC_API_URL` in both Vercel projects to that HTTPS API origin and redeploy them.
+
+The image listens on Railway's injected `PORT` and serves Laravel's `public` directory. It excludes `.env`, local vendor files, and uploaded media from the image. The current `public` filesystem disk is local to the container and is not durable across redeployments; configure an S3-compatible persistent object store before relying on production uploads. `CLOUDINARY_URL` alone is not supported by the current backend.
+
+For general production hardening:
 
 - Set `APP_ENV=production` and **`APP_DEBUG=false`**; keep the generated `APP_KEY` private.
 - Use HTTPS for the API, database connections where supported, and the S3-compatible storage endpoint.
